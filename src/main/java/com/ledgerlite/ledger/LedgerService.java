@@ -6,6 +6,8 @@ import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.util.Comparator;
+import java.util.List;
 import java.util.UUID;
 
 @Service
@@ -22,6 +24,14 @@ public class LedgerService {
     public BigDecimal balanceOf(UUID accountId) {
         BigDecimal balance = ledgerEntries.balanceOf(accountId);
         return Money.normalize(balance == null ? BigDecimal.ZERO : balance);
+    }
+
+    /** The entries of one transaction, DEBIT first, then CREDIT. */
+    @Transactional(readOnly = true)
+    public List<LedgerEntry> entriesOf(UUID transactionId) {
+        return ledgerEntries.findByTransactionId(transactionId).stream()
+                .sorted(Comparator.comparing(LedgerEntry::getEntryType))
+                .toList();
     }
 
     /**

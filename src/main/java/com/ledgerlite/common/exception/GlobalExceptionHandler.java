@@ -2,6 +2,7 @@ package com.ledgerlite.common.exception;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
@@ -40,6 +41,15 @@ public class GlobalExceptionHandler extends ResponseEntityExceptionHandler {
             HttpMessageNotReadableException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
         ApiError body = ApiError.of(400, "Malformed request", "VALIDATION_ERROR",
                 "Request body is missing or not valid JSON.");
+        return ResponseEntity.badRequest().body(body);
+    }
+
+    /** Bad UUID, enum or date in a path variable or query parameter. */
+    @Override
+    protected ResponseEntity<Object> handleTypeMismatch(
+            TypeMismatchException ex, HttpHeaders headers, HttpStatusCode status, WebRequest request) {
+        ApiError body = ApiError.of(400, "Invalid parameter", "VALIDATION_ERROR",
+                "A path variable or query parameter has an invalid value.");
         return ResponseEntity.badRequest().body(body);
     }
 

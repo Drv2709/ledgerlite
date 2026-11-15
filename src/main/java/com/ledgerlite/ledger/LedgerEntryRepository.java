@@ -5,6 +5,7 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 
 import java.math.BigDecimal;
+import java.util.List;
 import java.util.UUID;
 
 public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> {
@@ -19,4 +20,6 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, UUID> 
              WHERE account_id = :accountId
             """, nativeQuery = true)
     BigDecimal balanceOf(@Param("accountId") UUID accountId);
+
+    List<LedgerEntry> findByTransactionId(UUID transactionId);
 }

@@ -131,3 +131,13 @@ Creates a `REVERSAL` transaction with opposite entries. Only the original source
 ## Security notes
 - Cookie auth needs CSRF protection: `SameSite` plus a CSRF token header (double-submit pattern), implemented in P2.
 - Passwords, hashes and tokens are never logged or returned.
+
+## Implementation notes (P4)
+- Replayed idempotent responses carry the header `Idempotent-Replayed: true` and the exact original status and body.
+- Failed requests are not cached: a retry after an error (for example INSUFFICIENT_FUNDS) is evaluated again.
+- Idempotency-Key format: 1 to 64 characters from letters, digits, `.`, `_`, `-`. Keys are scoped per user.
+- Transfers to or from SYSTEM accounts are rejected (400). Cross-currency transfers are rejected (400).
+- Supported currencies: USD, CAD, EUR, GBP, INR. Amounts accept at most 4 decimal places (more is rejected, never rounded).
+- `direction` is relative to the `accountId` filter when given, otherwise to all of the caller's accounts (OUT if the money left one of them).
+- Only a TRANSFER can be reversed (400 otherwise). Reversals of an already reversed transaction return 409.
+- Invalid path or query values (bad UUID, enum or date) return 400 VALIDATION_ERROR.

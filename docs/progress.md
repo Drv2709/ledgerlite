@@ -200,3 +200,50 @@ Last updated: 2026-11-14
 ## Next
 
 P4: `POST /api/transfers`, reversals, idempotency, transaction history endpoints.
+
+# LedgerLite: Progress
+
+Repo: https://github.com/Drv2709/ledgerlite
+Last updated: 2026-11-15
+
+## Status
+
+| Phase | Scope | Status |
+|---|---|---|
+| P0 | ERD, API contract, docker-compose, pom, application.yml, V1 Flyway | Done and verified |
+| P1 | Spring Boot scaffold, DB connection, health check | Done and verified |
+| P2 | Spring Security, JWT, auth endpoints, User entity | Done and verified |
+| P3 | Account and Transaction entities, double-entry ledger logic | Done and verified |
+| P4 | Transfer endpoint (atomic, locking, idempotency) | Done and verified |
+| P5 | Integration and concurrency tests (Testcontainers, JUnit) | In progress |
+| P6 | React scaffold and auth integration | Not started |
+| P7 | Dashboard and transaction history | Not started |
+| P8 | Full-stack Docker Compose and GitHub Actions CI | Not started |
+| P9 | Deploy, README, architecture diagram | Not started |
+
+## P0 to P3 (done)
+- [x] Planning docs, infra, V1 and V2 schema, health check
+- [x] JWT in HttpOnly cookie, CSRF double-submit, auth endpoints, standard JSON errors
+- [x] Accounts, immutable double-entry ledger, balance derived from ledger sums, `Money` (BigDecimal scale 4, HALF_EVEN)
+
+## P4: Transfers, Idempotency, Reversals, History (done)
+- [x] `POST /api/transfers`: one `@Transactional` unit; claims the idempotency key, validates, locks both accounts (`PESSIMISTIC_WRITE`, ascending id), checks the balance after the lock, writes the transaction and the DEBIT / CREDIT pair
+- [x] Idempotency: `INSERT ... ON CONFLICT DO NOTHING` on `(user_id, key)`; replay returns the stored status and body with `Idempotent-Replayed: true`; same key with a different payload returns 422; failures are not cached
+- [x] `POST /api/transactions/{id}/reverse`: new REVERSAL transaction with opposite entries, original marked REVERSED, second reversal returns 409, only the source owner can reverse, only TRANSFERs can be reversed
+- [x] `GET /api/transactions` (page, size, accountId, type, from, to) and `GET /api/transactions/{id}`, scoped to the caller's accounts
+- [x] Overdraft returns 422 `INSUFFICIENT_FUNDS`; cross-currency and SYSTEM-account transfers return 400
+- [x] Verified with `scripts/test-transfers.sh`: 73 checks passing, including 10 parallel transfers out of a 50.00 account (exactly 5 succeed, balance ends at 0.0000) and 5 identical concurrent requests (money moves once)
+- [x] Test correction: "reversing a reversal" now checks both the ownership branch (403) and the type branch (400)
+
+## Key decisions
+- IDs: UUID; money: BigDecimal scale 4 / `NUMERIC(19,4)` / decimal strings in JSON
+- Concurrency: pessimistic locking, accounts locked in ascending UUID order, balance read after the lock
+- Reversals: new `REVERSAL` transaction, never edit or delete ledger rows
+- Supported currencies: USD, CAD, EUR, GBP, INR
+- Local Postgres host port is **5455**
+
+## Known open item
+- GitHub push is not working yet (authentication). Commits are local only. To be fixed before P8 (CI).
+
+## Next
+P5: JUnit + Mockito unit tests, Testcontainers integration tests, multi-threaded concurrency tests, IDOR security tests.
