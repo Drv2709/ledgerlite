@@ -208,25 +208,27 @@ Last updated: 2026-11-15
 
 ## Status
 
-| Phase | Scope | Status |
-|---|---|---|
-| P0 | ERD, API contract, docker-compose, pom, application.yml, V1 Flyway | Done and verified |
-| P1 | Spring Boot scaffold, DB connection, health check | Done and verified |
-| P2 | Spring Security, JWT, auth endpoints, User entity | Done and verified |
-| P3 | Account and Transaction entities, double-entry ledger logic | Done and verified |
-| P4 | Transfer endpoint (atomic, locking, idempotency) | Done and verified |
-| P5 | Integration and concurrency tests (Testcontainers, JUnit) | In progress |
-| P6 | React scaffold and auth integration | Not started |
-| P7 | Dashboard and transaction history | Not started |
-| P8 | Full-stack Docker Compose and GitHub Actions CI | Not started |
-| P9 | Deploy, README, architecture diagram | Not started |
+| Phase | Scope                                                              | Status            |
+| ----- | ------------------------------------------------------------------ | ----------------- |
+| P0    | ERD, API contract, docker-compose, pom, application.yml, V1 Flyway | Done and verified |
+| P1    | Spring Boot scaffold, DB connection, health check                  | Done and verified |
+| P2    | Spring Security, JWT, auth endpoints, User entity                  | Done and verified |
+| P3    | Account and Transaction entities, double-entry ledger logic        | Done and verified |
+| P4    | Transfer endpoint (atomic, locking, idempotency)                   | Done and verified |
+| P5    | Integration and concurrency tests (Testcontainers, JUnit)          | In progress       |
+| P6    | React scaffold and auth integration                                | Not started       |
+| P7    | Dashboard and transaction history                                  | Not started       |
+| P8    | Full-stack Docker Compose and GitHub Actions CI                    | Not started       |
+| P9    | Deploy, README, architecture diagram                               | Not started       |
 
 ## P0 to P3 (done)
+
 - [x] Planning docs, infra, V1 and V2 schema, health check
 - [x] JWT in HttpOnly cookie, CSRF double-submit, auth endpoints, standard JSON errors
 - [x] Accounts, immutable double-entry ledger, balance derived from ledger sums, `Money` (BigDecimal scale 4, HALF_EVEN)
 
 ## P4: Transfers, Idempotency, Reversals, History (done)
+
 - [x] `POST /api/transfers`: one `@Transactional` unit; claims the idempotency key, validates, locks both accounts (`PESSIMISTIC_WRITE`, ascending id), checks the balance after the lock, writes the transaction and the DEBIT / CREDIT pair
 - [x] Idempotency: `INSERT ... ON CONFLICT DO NOTHING` on `(user_id, key)`; replay returns the stored status and body with `Idempotent-Replayed: true`; same key with a different payload returns 422; failures are not cached
 - [x] `POST /api/transactions/{id}/reverse`: new REVERSAL transaction with opposite entries, original marked REVERSED, second reversal returns 409, only the source owner can reverse, only TRANSFERs can be reversed
@@ -236,6 +238,7 @@ Last updated: 2026-11-15
 - [x] Test correction: "reversing a reversal" now checks both the ownership branch (403) and the type branch (400)
 
 ## Key decisions
+
 - IDs: UUID; money: BigDecimal scale 4 / `NUMERIC(19,4)` / decimal strings in JSON
 - Concurrency: pessimistic locking, accounts locked in ascending UUID order, balance read after the lock
 - Reversals: new `REVERSAL` transaction, never edit or delete ledger rows
@@ -243,7 +246,68 @@ Last updated: 2026-11-15
 - Local Postgres host port is **5455**
 
 ## Known open item
+
 - GitHub push is not working yet (authentication). Commits are local only. To be fixed before P8 (CI).
 
 ## Next
+
 P5: JUnit + Mockito unit tests, Testcontainers integration tests, multi-threaded concurrency tests, IDOR security tests.
+
+# LedgerLite: Progress
+
+Repo: https://github.com/Drv2709/ledgerlite
+Last updated: 2026-11-15
+
+## Status
+
+| Phase | Scope                                                              | Status            |
+| ----- | ------------------------------------------------------------------ | ----------------- |
+| P0    | ERD, API contract, docker-compose, pom, application.yml, V1 Flyway | Done and verified |
+| P1    | Spring Boot scaffold, DB connection, health check                  | Done and verified |
+| P2    | Spring Security, JWT, auth endpoints, User entity                  | Done and verified |
+| P3    | Account and Transaction entities, double-entry ledger logic        | Done and verified |
+| P4    | Transfer endpoint (atomic, locking, idempotency)                   | Done and verified |
+| P5    | Integration and concurrency tests (Testcontainers, JUnit)          | Done and verified |
+| P6    | React scaffold and auth integration                                | In progress       |
+| P7    | Dashboard and transaction history                                  | Not started       |
+| P8    | Full-stack Docker Compose and GitHub Actions CI                    | Not started       |
+| P9    | Deploy, README, architecture diagram                               | Not started       |
+
+## P0 to P4 (done)
+
+- [x] Planning docs, infra, V1 and V2 schema, health check
+- [x] JWT in HttpOnly cookie, CSRF double-submit, auth endpoints, standard JSON errors
+- [x] Accounts, immutable double-entry ledger, balances derived from ledger sums
+- [x] Atomic transfers with row locks (ascending id), idempotency keys, reversals, transaction history
+- [x] `scripts/test-transfers.sh`: 73 end-to-end checks passing
+
+## P5: Backend tests (done)
+
+- [x] Unit tests (JUnit 5 + Mockito, no Spring): `MoneyTest` (4), `LedgerServiceTest` (8), `TransferServiceTest` (11)
+  - HALF_EVEN rounding, exact decimal sums, one DEBIT plus one CREDIT of equal amount
+  - lock is taken before the balance is read, nothing is written on a failed check, replays touch no money
+- [x] Integration tests on real PostgreSQL via Testcontainers: `TransferIntegrationTest` (6), `IdorSecurityTest` (7)
+  - real Flyway migrations, real security filter chain, real JWT cookie, CSRF enforced
+  - user B gets 403 on user A's account, spending, transactions and history; 401 for anonymous and forged tokens
+- [x] Concurrency tests with real threads: `TransferConcurrencyTest` (3)
+  - 10 threads x $10 from a $50 account: exactly 5 succeed, 5 rejected, balances 0 and 50
+  - opposite-direction transfers do not deadlock and conserve money
+  - 5 threads with one Idempotency-Key move money exactly once
+- [x] Verified: `./mvnw test` runs 39 tests, 0 failures, 0 errors
+- [x] Environment note: Docker 29 needs `api.version=1.44` in `~/.docker-java.properties` for Testcontainers 1.19 (local only; CI is not affected)
+
+## Key decisions
+
+- IDs: UUID; money: BigDecimal scale 4 / `NUMERIC(19,4)` / decimal strings in JSON
+- Concurrency: pessimistic locking, accounts locked in ascending UUID order, balance read after the lock
+- Reversals: new `REVERSAL` transaction, never edit or delete ledger rows
+- Local Postgres host port is **5455**
+
+## Known open items
+
+- GitHub push is not working yet (authentication). Commits are local only. To be fixed before P8 (CI).
+- Optional: run the three mutation checks to confirm the P5 tests fail when a rule is removed.
+
+## Next
+
+P6: React 18 + Vite + TypeScript (strict) scaffold, Axios + TanStack Query, login and register pages, protected routes.
