@@ -149,3 +149,54 @@ Last updated: 2026-11-14
 ## Next
 
 P3: Account, Transaction and LedgerEntry entities, balance from ledger sums, `GET/POST /api/accounts`.
+
+# LedgerLite: Progress
+
+Repo: https://github.com/Drv2709/ledgerlite
+Last updated: 2026-11-14
+
+## Status
+
+| Phase | Scope                                                              | Status            |
+| ----- | ------------------------------------------------------------------ | ----------------- |
+| P0    | ERD, API contract, docker-compose, pom, application.yml, V1 Flyway | Done and verified |
+| P1    | Spring Boot scaffold, DB connection, health check                  | Done and verified |
+| P2    | Spring Security, JWT, auth endpoints, User entity                  | Done and verified |
+| P3    | Account and Transaction entities, double-entry ledger logic        | Done and verified |
+| P4    | Transfer endpoint (atomic, locking, idempotency)                   | In progress       |
+| P5    | Integration and concurrency tests (Testcontainers, JUnit)          | Not started       |
+| P6    | React scaffold and auth integration                                | Not started       |
+| P7    | Dashboard and transaction history                                  | Not started       |
+| P8    | Full-stack Docker Compose and GitHub Actions CI                    | Not started       |
+| P9    | Deploy, README, architecture diagram                               | Not started       |
+
+## P0 to P2 (done)
+
+- [x] Planning docs, infra, V1 schema (append-only ledger trigger, balanced-transaction trigger), health check
+- [x] JWT in HttpOnly cookie, CSRF double-submit, register / login / logout / me, standard JSON errors
+
+## P3: Accounts and the Ledger (done)
+
+- [x] V2 migration: `VARCHAR` currency and request_hash columns, `account_number_seq`, SYSTEM funding accounts for CAD, EUR, GBP, INR (USD from V1)
+- [x] Entities: `Account` (no balance field), `Transaction`, `LedgerEntry` (`@Immutable`)
+- [x] `LedgerService`: balance = SUM(credits) - SUM(debits) in one SQL statement; `post()` writes the DEBIT and CREDIT pair and must run inside a caller's transaction
+- [x] `Money`: `BigDecimal`, scale 4, `HALF_EVEN`; amounts leave the API as strings
+- [x] `GET/POST /api/accounts`, `GET /api/accounts/{id}` (403 for another user's account, 404 if missing)
+- [x] Opening deposits post a real `DEPOSIT` transaction from the SYSTEM account
+- [x] Verified: 201 / 200 / 403 / 404 / 401 / 400 cases, every transaction nets to 0.0000, SYSTEM USD at -100.0000, UPDATE and DELETE on the ledger rejected, unbalanced insert rejected at commit
+
+## Key decisions
+
+- IDs: UUID; money: BigDecimal scale 4 / `NUMERIC(19,4)` / decimal strings in JSON
+- Concurrency: pessimistic locking (`PESSIMISTIC_WRITE`), accounts locked in ascending UUID order
+- Reversals: new `REVERSAL` transaction, never edit or delete ledger rows
+- Supported currencies: USD, CAD, EUR, GBP, INR
+- Local Postgres host port is **5455**
+
+## Known open item
+
+- GitHub push is not working yet (authentication). Commits are local only. To be fixed before P8 (CI).
+
+## Next
+
+P4: `POST /api/transfers`, reversals, idempotency, transaction history endpoints.
