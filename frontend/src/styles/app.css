@@ -1,0 +1,83 @@
+/* P7: layout, dashboard, tables, filters, states */
+
+.page { max-width: 960px; margin: 0 auto; padding: 1rem; }
+.topbar { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem 1.25rem; margin-bottom: 1rem; }
+.nav { display: flex; gap: 0.25rem; flex: 1; flex-wrap: wrap; }
+.nav-link { padding: 0.4rem 0.75rem; border-radius: 8px; color: var(--text); text-decoration: none; font-weight: 500; }
+.nav-link:hover { background: #e9edf5; }
+.nav-link.active { background: var(--primary); color: #fff; }
+.topbar-right { display: flex; align-items: center; gap: 0.75rem; }
+
+.section { margin-bottom: 1.75rem; }
+.section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.75rem; }
+.section-header h2 { margin: 0; }
+
+.grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 1rem; }
+.account-card h3 { margin: 0 0 0.25rem; font-size: 1.05rem; }
+.account-card .small { margin: 0 0 0.75rem; }
+.balance { font-size: 1.9rem; font-weight: 800; letter-spacing: -0.02em; margin: 0 0 0.75rem; font-variant-numeric: tabular-nums; }
+.link-button { font-weight: 600; text-decoration: none; }
+.link-button:hover { text-decoration: underline; }
+
+.card.narrow { max-width: 520px; }
+.inline-form { margin-bottom: 1rem; max-width: 520px; }
+.inline-form h3 { margin: 0 0 1rem; }
+.form-actions { display: flex; gap: 0.5rem; }
+.form-actions .button { width: auto; }
+.form-success {
+  background: #ecfdf3;
+  border: 1px solid #abefc6;
+  color: #067647;
+  border-radius: 8px;
+  padding: 0.6rem 0.75rem;
+  margin-bottom: 1rem;
+}
+
+select {
+  width: 100%;
+  padding: 0.6rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  font: inherit;
+  background: #fff;
+}
+select:focus { outline: 2px solid var(--primary); outline-offset: 1px; }
+.field input[type='date'] { min-height: 2.6rem; }
+
+.filters { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 0 1rem; margin-bottom: 1rem; align-items: end; }
+.filters .field { margin-bottom: 0.75rem; }
+.filters-clear { align-self: center; margin-bottom: 0.75rem; }
+
+.table-wrap { overflow-x: auto; }
+.table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+.table th { text-align: left; font-weight: 600; color: var(--muted); padding: 0.5rem 0.5rem; border-bottom: 1px solid var(--border); white-space: nowrap; }
+.table td { padding: 0.65rem 0.5rem; border-bottom: 1px solid #eef1f6; vertical-align: top; }
+.table tr:last-child td { border-bottom: 0; }
+.table .num { text-align: right; }
+.nowrap { white-space: nowrap; }
+.amount { font-weight: 700; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.amount-in { color: #067647; }
+.amount-out { color: var(--text); }
+
+.badge { display: inline-block; font-size: 0.75rem; font-weight: 600; padding: 0.1rem 0.5rem; border-radius: 999px; background: #eef1f6; color: var(--muted); margin-right: 0.25rem; }
+.badge-warn { background: #fffaeb; color: #b54708; }
+
+.pagination { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.75rem; margin-top: 1rem; }
+.pagination-controls { display: flex; flex-wrap: wrap; align-items: center; gap: 0.75rem; }
+.pagination-size { display: flex; align-items: center; gap: 0.4rem; }
+.pagination-size select { width: auto; padding: 0.35rem 0.5rem; }
+.pagination .button { padding: 0.4rem 0.8rem; }
+.results.is-updating { opacity: 0.6; transition: opacity 0.15s; }
+
+.state { text-align: center; padding: 1.5rem 1rem; }
+.state-title { font-weight: 700; margin: 0 0 0.25rem; }
+.state p { margin: 0 0 0.75rem; }
+.state-error .state-title { color: var(--danger); }
+
+.skeleton { display: block; border-radius: 6px; background: linear-gradient(90deg, #e9edf5 25%, #f6f8fc 37%, #e9edf5 63%); background-size: 400% 100%; animation: shimmer 1.3s ease infinite; margin-bottom: 0.6rem; }
+.skeleton-rows { padding: 0.25rem 0; }
+@keyframes shimmer { 0% { background-position: 100% 50%; } 100% { background-position: 0 50%; } }
+
+@media (max-width: 640px) {
+  .topbar-right { width: 100%; justify-content: space-between; }
+}

@@ -1,16 +1,32 @@
 interface FormFieldProps {
   id: string;
   label: string;
-  type: 'email' | 'password' | 'text';
+  type: 'email' | 'password' | 'text' | 'date';
   value: string;
   onChange: (value: string) => void;
-  autoComplete: string;
+  autoComplete?: string;
   error?: string;
   hint?: string;
   disabled?: boolean;
+  placeholder?: string;
+  inputMode?: 'text' | 'decimal';
+  maxLength?: number;
 }
 
-export function FormField({ id, label, type, value, onChange, autoComplete, error, hint, disabled }: FormFieldProps) {
+export function FormField({
+  id,
+  label,
+  type,
+  value,
+  onChange,
+  autoComplete,
+  error,
+  hint,
+  disabled,
+  placeholder,
+  inputMode,
+  maxLength,
+}: FormFieldProps) {
   const describedBy = error ? `${id}-error` : hint ? `${id}-hint` : undefined;
   return (
     <div className="field">
@@ -22,6 +38,9 @@ export function FormField({ id, label, type, value, onChange, autoComplete, erro
         value={value}
         autoComplete={autoComplete}
         disabled={disabled}
+        placeholder={placeholder}
+        inputMode={inputMode}
+        maxLength={maxLength}
         aria-invalid={error ? true : undefined}
         aria-describedby={describedBy}
         onChange={(event) => onChange(event.target.value)}
