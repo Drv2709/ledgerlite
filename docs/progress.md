@@ -15,30 +15,25 @@ Last updated: 2026-11-17
 | P5 | Integration and concurrency tests (Testcontainers, JUnit) | Done and verified |
 | P6 | React scaffold and auth integration | Done and verified |
 | P7 | Dashboard and transaction history | Done and verified |
-| P8 | Full-stack Docker Compose and GitHub Actions CI | In progress |
-| P8b | Admin role: read-only admin API (users, transactions) and tests | Planned (added by request) |
+| P8 | Full-stack Docker Compose and GitHub Actions CI | Done locally; CI run pending (needs GitHub push) |
+| P8b | Admin role: read-only admin API (users, transactions) and tests | In progress |
 | P9 | Deploy, README, architecture diagram | Not started |
 
-## P0 to P5 (done)
+## P0 to P7 (done)
 - [x] Planning docs, infra, V1 and V2 schema, health check
 - [x] JWT in HttpOnly cookie, CSRF double-submit, auth endpoints, standard JSON errors
 - [x] Accounts, immutable double-entry ledger, atomic transfers, idempotency, reversals, history
 - [x] 39 JUnit tests (unit, Testcontainers integration, concurrency, IDOR) and 73 end-to-end shell checks passing
+- [x] React 18 + Vite + TypeScript strict: auth, dashboard, transfer form, history with pagination and filters, loading, error and empty states
 
-## P6: React scaffold and auth (done)
-- [x] Vite 5 + React 18 + TypeScript `strict`; `npm run check:no-any` fails the build if `any` appears in `src/`
-- [x] Axios client with cookie auth and CSRF header; TanStack Query holds the session; protected and public-only routes
-- [x] `react-router-dom` upgraded to v7.18.5; `npm audit --omit=dev` reports 0 vulnerabilities
-
-## P7: Dashboard, transfers and history (done)
-- [x] Dashboard: one card per account with a large formatted balance, "New account" form (optional starting balance), 5 most recent transactions
-- [x] Send money page: source account select, destination account number, amount, note; backend errors shown inline (insufficient funds, unknown account)
-- [x] Idempotency-Key generated once per intent: reused when retrying the same request, rotated when any field changes or after success
-- [x] History page: filters (account, type, from and to dates), server-side pagination (10, 25 or 50 per page), previous page stays visible while the next loads
-- [x] Loading skeletons, error panels with Retry, empty states (no accounts, no transactions, no filter matches), error boundary per page
-- [x] Money is handled as decimal strings with BigInt checks; no parseFloat, no toFixed, no floats
-- [x] `scripts/seed-ui-demo.sh` creates demo users with 28 transactions for UI testing
-- [x] Verified: typecheck, no-any check and production build pass; every browser check passed (dashboard, pagination, filters, transfer errors and success, skeleton, error and empty states)
+## P8: Docker and CI
+- [x] Backend `Dockerfile`: multi-stage (Maven + JDK 21, then JRE 21 Alpine), non-root user
+- [x] Frontend `Dockerfile` + `nginx.conf`: Vite build served by Nginx, proxies `/api` and `/health` to the backend (same-origin cookies), SPA fallback, security headers
+- [x] `docker-compose.yml`: Postgres by default; backend and frontend behind the `full` profile (`docker compose --profile full up -d --build --wait`, app on http://localhost:8081). `JWT_SECRET` has no default, so the backend refuses to start without one
+- [x] `scripts/smoke-test.sh`: 21 end-to-end checks through Nginx (static site, SPA fallback, auth, accounts, transfer, idempotent replay, ownership, CSRF)
+- [x] Verified locally: all three containers healthy, smoke test 21 of 21 passing
+- [x] `.github/workflows/ci.yml`: backend tests, frontend checks, Docker stack smoke test (written, not yet run on GitHub)
+- [ ] GitHub push (SSH) and first green CI run
 
 ## Key decisions
 - IDs: UUID; money: BigDecimal scale 4 / `NUMERIC(19,4)` / decimal strings in JSON
@@ -47,12 +42,13 @@ Last updated: 2026-11-17
 - Frontend talks to the API same-origin (Vite proxy in dev, Nginx in Docker). The HttpOnly cookie keeps working
 - Local Postgres host port is **5455**
 - Admin role: added as phase P8b (after P8, before P9). Promotion by SQL only, read-only API, ledger stays immutable.
+- Deployment plan: Neon (Postgres) + Render. Leaning towards one Render web service serving both API and UI (same-origin), pending confirmation
 
 ## Known open items
-- GitHub push is not working yet (authentication). Commits are local only. Must be fixed for CI (P8).
-- Dev-only advisories (Vite 5 / esbuild) remain. They affect only the local dev server and never the production bundle. Plan: bump Vite in a separate chore before P9; keep the dev server on localhost (never use --host).
+- GitHub push is not working yet. Commits are local only. Needed for CI.
+- Dev-only advisories (Vite 5 / esbuild) remain; they affect only the local dev server. Plan: bump Vite in a separate chore before P9.
 - Optional: run the three mutation checks to confirm the P5 tests fail when a rule is removed.
 - Reverse-transaction button is not in the UI (the backend endpoint exists).
 
 ## Next
-P8: backend and frontend Dockerfiles, full-stack Docker Compose, GitHub Actions CI.
+P8b: admin role (read-only admin API, tests). Then P9: deploy, README, architecture diagram.

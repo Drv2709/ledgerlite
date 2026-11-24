@@ -9,7 +9,7 @@ TMP=$(mktemp -d); trap 'rm -rf "$TMP"' EXIT
 HDR="$TMP/hdr"; BODYF="$TMP/body"
 PASS=0; FAIL=0; STATUS=""; BODY=""; REPLAYED=""
 
-xsrf()  { awk '$6=="XSRF-TOKEN"{print $7}' "$1"; }
+xsrf()  { [ -f "$1" ] && awk '$6=="XSRF-TOKEN"{print $7}' "$1"; }
 check() { if [ "$2" = "$3" ]; then echo "  PASS  $1"; PASS=$((PASS+1)); else echo "  FAIL  $1 (expected '$2', got '$3')"; FAIL=$((FAIL+1)); fi; }
 field() { echo "$BODY" | grep -o "\"$1\":\"[^\"]*\"" | head -1 | cut -d'"' -f4; }
 contains() { case "$2" in *"$3"*) check "$1" yes yes ;; *) check "$1" yes no ;; esac; }
