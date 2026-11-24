@@ -1,8 +1,10 @@
 name: ledgerlite
 
-# Daily development:   docker compose up -d                        (Postgres only, run the app from your IDE)
-# Whole stack:         docker compose --profile full up -d --build --wait     then open http://localhost:8081
-# The whole stack needs JWT_SECRET in a .env file (see .env.example).
+# Daily development:   docker compose up -d                                   (Postgres only, run the app from your IDE)
+# Nginx + API stack:   docker compose --profile full up -d --build --wait     http://localhost:8081
+# Single image:        docker compose --profile single up -d --build --wait   http://localhost:8082
+#                      (the exact image that is deployed to Render: API and React app in one service)
+# The full and single profiles need JWT_SECRET in a .env file (see .env.example).
 
 services:
   postgres:
@@ -56,6 +58,31 @@ services:
     depends_on:
       backend:
         condition: service_healthy
+    restart: unless-stopped
+
+  app:
+    profiles: ["single"]
+    build:
+      context: .
+      dockerfile: Dockerfile.render
+    environment:
+      DB_URL: jdbc:postgresql://postgres:5432/ledgerlite
+      DB_USERNAME: ledgerlite
+      DB_PASSWORD: ledgerlite_dev
+      JWT_SECRET: ${JWT_SECRET:-}
+      COOKIE_SECURE: "false"
+      COOKIE_SAMESITE: Lax
+    ports:
+      - "8082:8080"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:8080/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 40s
     restart: unless-stopped
 
 volumes:

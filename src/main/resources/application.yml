@@ -6,6 +6,16 @@ spring:
     url: ${DB_URL:jdbc:postgresql://localhost:5455/ledgerlite}
     username: ${DB_USERNAME:ledgerlite}
     password: ${DB_PASSWORD:ledgerlite_dev}
+    hikari:
+      # Small pool, and idle connections are closed after a minute, so a serverless database
+      # such as Neon can suspend its compute when nobody is using the app.
+      maximum-pool-size: ${DB_POOL_SIZE:5}
+      minimum-idle: 0
+      idle-timeout: 60000
+      max-lifetime: 300000
+      connection-timeout: 30000
+      # Wait up to a minute for the database at startup (a suspended Neon compute needs a moment to wake).
+      initialization-fail-timeout: 60000
 
   jpa:
     open-in-view: false
@@ -23,8 +33,17 @@ spring:
   jackson:
     default-property-inclusion: non_null
 
+  web:
+    resources:
+      # The React build is served by SpaWebConfig, which is the only static mapping.
+      add-mappings: false
+
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
 server:
   port: ${PORT:8080}
+  shutdown: graceful
 
 management:
   endpoints:

@@ -64,7 +64,11 @@ public class SecurityConfig {
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
                 // First layer of admin protection. AdminService re-checks the role in the database (second layer).
                 .requestMatchers("/api/admin/**").hasRole("ADMIN")
-                .anyRequest().authenticated())
+                // Every other API call needs a valid session.
+                .requestMatchers("/api/**").authenticated()
+                // Anything that is not API: the React app (index.html, /assets, client-side routes). Public by design;
+                // the app itself shows the sign-in page and every data call above is protected.
+                .anyRequest().permitAll())
             .addFilterBefore(new JwtAuthenticationFilter(jwtService, properties.cookie().name()),
                     UsernamePasswordAuthenticationFilter.class)
             .addFilterAfter(new CsrfCookieFilter(), BasicAuthenticationFilter.class);

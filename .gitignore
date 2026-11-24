@@ -8,3 +8,6 @@ node_modules/
 dist/
 .DS_Store
 cookies.txt
+
+# Built React app copied in by Dockerfile.render (never commit)
+src/main/resources/static/

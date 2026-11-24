@@ -34,7 +34,11 @@ export function getErrorMessage(error: unknown): string {
     if (!error.response) {
       return 'Cannot reach the server. Check your connection and try again.';
     }
-    if (error.response.status >= 500) {
+    const status = error.response.status;
+    if (status === 502 || status === 503 || status === 504) {
+      return 'The server is starting up. Please try again in a few seconds.';
+    }
+    if (status >= 500) {
       return 'The server is having trouble right now. Please try again shortly.';
     }
   }

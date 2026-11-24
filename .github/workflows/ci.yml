@@ -65,8 +65,8 @@ jobs:
       - name: Audit production dependencies
         run: npm audit --omit=dev --audit-level=high
 
-  docker-smoke:
-    name: Docker stack smoke test
+  docker-nginx-stack:
+    name: Docker stack smoke test (Nginx + API)
     runs-on: ubuntu-latest
     needs: [backend, frontend]
     timeout-minutes: 20
@@ -89,3 +89,28 @@ jobs:
       - name: Tear down
         if: always()
         run: docker compose --profile full down -v
+
+  docker-single-image:
+    name: Single image smoke test (the Render image)
+    runs-on: ubuntu-latest
+    needs: [backend, frontend]
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create a throwaway .env
+        run: echo "JWT_SECRET=$(openssl rand -hex 32)" > .env
+
+      - name: Build and start the single image (API and React app together)
+        run: docker compose --profile single up -d --build --wait --wait-timeout 240
+
+      - name: Smoke test the single image
+        run: bash scripts/smoke-test.sh http://localhost:8082
+
+      - name: Show container logs on failure
+        if: failure()
+        run: docker compose --profile single logs --no-color
+
+      - name: Tear down
+        if: always()
+        run: docker compose --profile single down -v

@@ -128,3 +128,11 @@ stateless Spring Security (no server sessions); `@Valid` / `jakarta.validation` 
 server-side ownership checks on every account and transaction access; `JWT_SECRET` from the environment;
 CSRF token (double-submit) on every state-changing request; money is `BigDecimal` (`HALF_EVEN`) in Java,
 `NUMERIC(19,4)` in Postgres and decimal strings in JSON, never `double` or `float`.
+## Deployment (P9)
+- **Option A:** one Render Docker web service (`Dockerfile.render`) serves the API and the built React app from the same
+  origin, so the HttpOnly cookie and CSRF design work unchanged and no CORS is needed.
+- **Database:** Neon PostgreSQL over the direct (non-pooled) endpoint. The Hikari pool is small and closes idle connections
+  after a minute so Neon can suspend its compute.
+- **Same artifact everywhere:** `docker compose --profile single` builds the exact image that is deployed, and CI
+  smoke-tests it.
+- Setup steps: `docs/DEPLOY.md`. Diagrams: `docs/architecture.md`. Overview and decisions: `README.md`.
