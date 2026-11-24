@@ -141,3 +141,37 @@ Creates a `REVERSAL` transaction with opposite entries. Only the original source
 - `direction` is relative to the `accountId` filter when given, otherwise to all of the caller's accounts (OUT if the money left one of them).
 - Only a TRANSFER can be reversed (400 otherwise). Reversals of an already reversed transaction return 409.
 - Invalid path or query values (bad UUID, enum or date) return 400 VALIDATION_ERROR.
+
+## Admin API
+Read-only. Requires an administrator. Promotion is a manual SQL statement (`scripts/make-admin.sh`), never an endpoint.
+The role is stored in the JWT at sign-in, so a newly promoted user must sign in again. Every admin call also
+re-checks the role in the database, so a demoted admin loses access immediately.
+
+| Caller | Result |
+|---|---|
+| Not logged in | `401` |
+| Logged in as USER (or an admin whose role was revoked) | `403` |
+| Logged in as ADMIN | `200` |
+
+Admin power does not extend to the normal API: an admin still gets `403` on another user's `/api/accounts/{id}`.
+The internal SYSTEM user is never listed. Password hashes and tokens never appear in any response.
+
+### GET /api/admin/users
+Query: `page` (default 0), `size` (default 10, max 100). Newest first.
+```json
+{ "content": [ { "id": "…", "email": "ana@example.com", "role": "USER", "createdAt": "2026-11-15T03:16:41Z" } ],
+  "page": 0, "size": 10, "totalElements": 1, "totalPages": 1 }
+```
+
+### GET /api/admin/transactions
+Query: `page`, `size`, `accountId` (source or destination, any account), `type`, `from`, `to`. Newest first.
+Includes opening deposits from the SYSTEM accounts (for example `LL-SYSTEM-USD`).
+```json
+{ "content": [ {
+    "id": "…", "type": "TRANSFER", "status": "COMPLETED", "amount": "10.0000", "currency": "USD",
+    "sourceAccountId": "…", "sourceAccountNumber": "LL-0000000001",
+    "destinationAccountId": "…", "destinationAccountNumber": "LL-0000000002",
+    "initiatedBy": "…", "description": "Rent", "createdAt": "2026-11-15T03:20:00Z" } ],
+  "page": 0, "size": 10, "totalElements": 1, "totalPages": 1 }
+```
+There are no write endpoints under `/api/admin` (POST, PUT and DELETE return `405`).

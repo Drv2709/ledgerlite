@@ -62,6 +62,8 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers("/health", "/actuator/health/**").permitAll()
                 .requestMatchers("/api/auth/register", "/api/auth/login").permitAll()
+                // First layer of admin protection. AdminService re-checks the role in the database (second layer).
+                .requestMatchers("/api/admin/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .addFilterBefore(new JwtAuthenticationFilter(jwtService, properties.cookie().name()),
                     UsernamePasswordAuthenticationFilter.class)
