@@ -62,3 +62,4 @@ It registers two users, moves money, checks idempotent replay and ownership, and
 | `Unable to obtain connection` at startup, then recovers | the Neon database was waking up: the pool waits up to a minute |
 | Sign-in appears to succeed but you are sent back to sign-in | `COOKIE_SECURE=true` over plain HTTP, or a stale cookie from another deployment |
 | The page loads but every API call fails | wrong `DB_URL` form: it must start with `jdbc:postgresql://` |
+| `Could not resolve placeholder` (for example `DB_URL` or `JWT_SECRET`) | that environment variable is missing in Render. The production profile refuses to start without it |

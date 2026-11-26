@@ -25,5 +25,7 @@ WORKDIR /app
 COPY --from=build /workspace/target/*.jar /app/app.jar
 USER app
 EXPOSE 8080
+# Production profile: no fallback values for the database or the JWT secret (see application-prod.yml).
+ENV SPRING_PROFILES_ACTIVE=prod
 # Conservative memory settings for small instances. Render sets PORT; the app reads it.
 ENTRYPOINT ["java", "-XX:MaxRAMPercentage=70", "-XX:+UseSerialGC", "-XX:TieredStopAtLevel=1", "-jar", "/app/app.jar"]
