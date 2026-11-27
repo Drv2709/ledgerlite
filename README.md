@@ -140,4 +140,15 @@ reset, no rate limiting, and no admin screens in the UI. Accounts support five c
 one currency. Free hosting tiers sleep when idle.
 
 ## Screenshots
-_Add screenshots here after deploying: dashboard, transfer form, transaction history, admin API response._
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+![Send money](docs/screenshots/transfer.png)
+
+![Transaction history](docs/screenshots/history.png)
+
+![Dashboard](docs/screenshots/dashboard.png)
+
+![Send money](docs/screenshots/transfer.png)
+
+![Transaction history](docs/screenshots/history.png)
