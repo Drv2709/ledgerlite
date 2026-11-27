@@ -5,7 +5,7 @@ atomically, and can reverse mistakes without anything ever being edited or delet
 
 [![CI](https://github.com/Drv2709/ledgerlite/actions/workflows/ci.yml/badge.svg)](https://github.com/Drv2709/ledgerlite/actions/workflows/ci.yml)
 
-**Live demo:**https://ledgerlite-wg8w.onrender.com(a free instance sleeps when idle, so the first load can be slow).
+**Live demo:** https://ledgerlite-wg8w.onrender.com (a free instance sleeps when idle, so the first load can be slow).
 
 ## Features
 - Register and sign in; sessions are a JWT in an **HttpOnly cookie** with CSRF protection
